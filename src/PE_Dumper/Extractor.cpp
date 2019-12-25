@@ -55,7 +55,7 @@ BYTE* ExtractExportedFunctionName(PE_INFO* PEInfo, DWORD FunctionRVA, WORD* Name
     fileAddress = RVAToFA(PEInfo, (*PEInfo).pExportDir->AddressOfFunctions);
     if (0 == fileAddress)
     {
-        return (BYTE*)0xFFFFFFFF;
+        return (BYTE*)0xFFFFFFFF; 
     }
     addrOfFunctions = (DWORD*)((BYTE*)(*PEInfo).pDOS + fileAddress);
 
@@ -63,7 +63,7 @@ BYTE* ExtractExportedFunctionName(PE_INFO* PEInfo, DWORD FunctionRVA, WORD* Name
     fileAddress = RVAToFA(PEInfo, (*PEInfo).pExportDir->AddressOfNames);
     if (0 == fileAddress)
     {
-        return (BYTE*)0xFFFFFFFF;
+        return (BYTE*)0xFFFFFFFF; 
     }
     names = (DWORD*)((BYTE*)(*PEInfo).pDOS + fileAddress);
 
@@ -71,7 +71,7 @@ BYTE* ExtractExportedFunctionName(PE_INFO* PEInfo, DWORD FunctionRVA, WORD* Name
     fileAddress = RVAToFA(PEInfo, (*PEInfo).pExportDir->AddressOfNameOrdinals);
     if (0 == fileAddress)
     {
-        return (BYTE*)0xFFFFFFFF;
+        return (BYTE*)0xFFFFFFFF; 
     }
     nameOrdinals = (WORD*)((BYTE*)(*PEInfo).pDOS + fileAddress);
 
@@ -85,7 +85,7 @@ BYTE* ExtractExportedFunctionName(PE_INFO* PEInfo, DWORD FunctionRVA, WORD* Name
             fileAddress = RVAToFA(PEInfo, names[i]);
             if (0 == fileAddress)
             {
-                return (PBYTE)0xFFFFFFFF;
+                return (BYTE*)0xFFFFFFFF; 
             }
             nameAddress = (BYTE*)((BYTE*)(*PEInfo).pDOS + fileAddress);
 
@@ -149,7 +149,7 @@ BYTE* ExtractFunctionName(PE_INFO* PEInfo, IMAGE_THUNK_DATA* ThunksData)
     DWORD fileAddress = 0;
     IMAGE_IMPORT_BY_NAME* importStruct = NULL;
 
-    functionRVA = ThunksData->u1.Function;
+    functionRVA = (DWORD)ThunksData->u1.Function;
     if (0 != (functionRVA >> 31))
     {
         return NULL;
@@ -174,7 +174,7 @@ DWORD ExtractOrdinal(IMAGE_THUNK_DATA* ThunkData)
         return 0;
     }
 
-    functionRVA = ThunkData->u1.Function;
+    functionRVA = (DWORD)ThunkData->u1.Function;
     if (0 != (functionRVA >> 31))
     {
         return functionRVA & 0xFFFF;

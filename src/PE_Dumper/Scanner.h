@@ -9,10 +9,10 @@
 #define STATUS_ERROR_INVALID_EXPORT_DIRECTORY -15
 
 
-int ScanDosHeader(IMAGE_DOS_HEADER* DosHeader);
-int ScanNTHeader(IMAGE_NT_HEADERS* NTHeader);
-int ScanFileHeader(IMAGE_FILE_HEADER* FileHeader);
-int ScanOptionalHeader(IMAGE_OPTIONAL_HEADER* OptionalHeader);
-int ScanSectionHeaders(IMAGE_SECTION_HEADER* SectionHeader, DWORD NumberOfSections);
-int ScanExportDirectory(PE_INFO* PEInfo);
-int ScanImportDescriptor(PE_INFO* PEInfo);
+int ScanDosHeader(IMAGE_DOS_HEADER* DosHeader, HANDLE hLogFile);
+int ScanNTHeader(IMAGE_NT_HEADERS* NTHeader, HANDLE hLogFile);
+int ScanFileHeader(IMAGE_FILE_HEADER* FileHeader, HANDLE hLogFile);
+int ScanOptionalHeader(IMAGE_OPTIONAL_HEADER* OptionalHeader, HANDLE hLogFile);
+int ScanSectionHeaders(IMAGE_SECTION_HEADER* SectionHeader, DWORD NumberOfSections, HANDLE hLogFile);
+int ScanExportDirectory(PE_INFO* PEInfo, HANDLE hLogFile);
+int ScanImportDescriptor(PE_INFO* PEInfo, HANDLE hLogFile);

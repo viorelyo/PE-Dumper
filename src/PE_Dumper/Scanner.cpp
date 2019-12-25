@@ -8,7 +8,7 @@
 #define STRING_ON_STACK_LEN 20
 
 
-int ScanDosHeader(IMAGE_DOS_HEADER* DosHeader)
+int ScanDosHeader(IMAGE_DOS_HEADER* DosHeader, HANDLE hLogFile)
 {
     char* bufferToWrite = NULL;
     if (IMAGE_DOS_SIGNATURE != DosHeader->e_magic)
@@ -16,7 +16,7 @@ int ScanDosHeader(IMAGE_DOS_HEADER* DosHeader)
         bufferToWrite = (char*)calloc(MAX_BUFFER_LEN, sizeof(char));
         strcpy_s(bufferToWrite, MAX_BUFFER_LEN, "[-] No MZ signature found\r\n");
 
-        WriteResultsToFile(bufferToWrite);
+        WriteResultsToFile(bufferToWrite, hLogFile);
 
         free(bufferToWrite);
         return STATUS_ERROR_INVALID_DOS_HEADER;
@@ -25,7 +25,7 @@ int ScanDosHeader(IMAGE_DOS_HEADER* DosHeader)
 }
 
 
-int ScanNTHeader(IMAGE_NT_HEADERS* NTHeader)
+int ScanNTHeader(IMAGE_NT_HEADERS* NTHeader, HANDLE hLogFile)
 {
     char* bufferToWrite = NULL;
     if (IMAGE_NT_SIGNATURE != NTHeader->Signature)
@@ -33,7 +33,7 @@ int ScanNTHeader(IMAGE_NT_HEADERS* NTHeader)
         bufferToWrite = (char*)calloc(MAX_BUFFER_LEN, sizeof(char));
         strcpy_s(bufferToWrite, MAX_BUFFER_LEN, "[-] No PE signature found\r\n");
 
-        WriteResultsToFile(bufferToWrite);
+        WriteResultsToFile(bufferToWrite, hLogFile);
 
         free(bufferToWrite);
         return STATUS_ERROR_INVALID_NT_HEADER;
@@ -42,7 +42,7 @@ int ScanNTHeader(IMAGE_NT_HEADERS* NTHeader)
 }
 
 
-int ScanFileHeader(IMAGE_FILE_HEADER* FileHeader)
+int ScanFileHeader(IMAGE_FILE_HEADER* FileHeader, HANDLE hLogFile)
 {
     char* bufferToWrite = NULL;
 
@@ -53,14 +53,14 @@ int ScanFileHeader(IMAGE_FILE_HEADER* FileHeader)
         FileHeader->SizeOfOptionalHeader,
         FileHeader->Characteristics);
 
-    WriteResultsToFile(bufferToWrite);
+    WriteResultsToFile(bufferToWrite, hLogFile);
 
     free(bufferToWrite);
     return 0;
 }
 
 
-int ScanOptionalHeader(IMAGE_OPTIONAL_HEADER* OptionalHeader)
+int ScanOptionalHeader(IMAGE_OPTIONAL_HEADER* OptionalHeader, HANDLE hLogFile)
 {
     int status = 0;
     char* bufferToWrite = NULL;
@@ -70,18 +70,18 @@ int ScanOptionalHeader(IMAGE_OPTIONAL_HEADER* OptionalHeader)
     {
         sprintf_s(bufferToWrite, MAX_BUFFER_LEN, "\r\nOptional Header:\r\n\t * Magic: 0x%04X\r\n\t * AddressOfEntryPoint: 0x%08X\r\n\t * ImageBase: 0x%08X\r\n\t * SectionAlignment: 0x%08X\r\n\t * FileAlignment: 0x%08X\r\n\t * SizeOfImage: 0x%08X\r\n\t * Subsystem: 0x%04X\r\n\t * DllCharacteristics: 0x%04X\r\n\t * SizeOfStackReserve: 0x%08X\r\n\t * SizeOfStackCommit: 0x%08X\r\n\t * SizeOfHeapReserve: 0x%08X\r\n\t * SizeOfHeapCommit: 0x%08X\r\n\t * NumberOfRvaAndSizes: 0x%08X\r\n",
             OptionalHeader->Magic,
-            OptionalHeader->AddressOfEntryPoint,
-            OptionalHeader->ImageBase,
-            OptionalHeader->SectionAlignment,
-            OptionalHeader->FileAlignment,
-            OptionalHeader->SizeOfImage,
+            (unsigned int)OptionalHeader->AddressOfEntryPoint,
+            (unsigned int)OptionalHeader->ImageBase,
+            (unsigned int)OptionalHeader->SectionAlignment,
+            (unsigned int)OptionalHeader->FileAlignment,
+            (unsigned int)OptionalHeader->SizeOfImage,
             OptionalHeader->Subsystem,
             OptionalHeader->DllCharacteristics,
-            OptionalHeader->SizeOfStackReserve,
-            OptionalHeader->SizeOfStackCommit,
-            OptionalHeader->SizeOfHeapReserve,
-            OptionalHeader->SizeOfHeapCommit,
-            OptionalHeader->NumberOfRvaAndSizes
+            (unsigned int)OptionalHeader->SizeOfStackReserve,
+            (unsigned int)OptionalHeader->SizeOfStackCommit,
+            (unsigned int)OptionalHeader->SizeOfHeapReserve,
+            (unsigned int)OptionalHeader->SizeOfHeapCommit,
+            (unsigned int)OptionalHeader->NumberOfRvaAndSizes
         );
     }
     else
@@ -89,21 +89,21 @@ int ScanOptionalHeader(IMAGE_OPTIONAL_HEADER* OptionalHeader)
         sprintf_s(bufferToWrite, MAX_BUFFER_LEN, "[-] 64 bit PE file. (Only 32 bit PE files supported.)\r\n");
         status = STATUS_ERROR_INVALID_OPTIONAL_HEADER;
     }
-    WriteResultsToFile(bufferToWrite);
+    WriteResultsToFile(bufferToWrite, hLogFile);
 
     free(bufferToWrite);
     return status;
 }
 
 
-int ScanSectionHeaders(IMAGE_SECTION_HEADER* SectionHeader, DWORD NumberOfSections)
+int ScanSectionHeaders(IMAGE_SECTION_HEADER* SectionHeader, DWORD NumberOfSections, HANDLE hLogFile)
 {
     char* bufferToWrite = NULL;
 
     bufferToWrite = (char*)calloc(MAX_BUFFER_LEN, sizeof(char));
     sprintf_s(bufferToWrite, MAX_BUFFER_LEN, "\r\nSections:\r\n");
 
-    WriteResultsToFile(bufferToWrite);
+    WriteResultsToFile(bufferToWrite, hLogFile);
     free(bufferToWrite);
 
     if (NULL == SectionHeader)
@@ -111,7 +111,7 @@ int ScanSectionHeaders(IMAGE_SECTION_HEADER* SectionHeader, DWORD NumberOfSectio
         bufferToWrite = (char*)calloc(MAX_BUFFER_LEN, sizeof(char));
         sprintf_s(bufferToWrite, MAX_BUFFER_LEN, "[-] Invalid Section Header\r\n");
 
-        WriteResultsToFile(bufferToWrite);
+        WriteResultsToFile(bufferToWrite, hLogFile);
         free(bufferToWrite);
 
         return STATUS_ERROR_INVALID_SECTION_HEADER;
@@ -122,7 +122,7 @@ int ScanSectionHeaders(IMAGE_SECTION_HEADER* SectionHeader, DWORD NumberOfSectio
     sprintf_s(bufferToWrite, MAX_BUFFER_LEN, "%-20s %-20s %-20s %-20s\r\n",
         "Name", "FileAddress", "Size", "VirtualSize");
 
-    WriteResultsToFile(bufferToWrite);
+    WriteResultsToFile(bufferToWrite, hLogFile);
     free(bufferToWrite);
 
     // Enumerating Sections and their informations
@@ -135,7 +135,7 @@ int ScanSectionHeaders(IMAGE_SECTION_HEADER* SectionHeader, DWORD NumberOfSectio
             SectionHeader[i].SizeOfRawData,
             SectionHeader[i].Misc.VirtualSize);
 
-        WriteResultsToFile(bufferToWrite);
+        WriteResultsToFile(bufferToWrite, hLogFile);
         free(bufferToWrite);
     }
 
@@ -143,7 +143,7 @@ int ScanSectionHeaders(IMAGE_SECTION_HEADER* SectionHeader, DWORD NumberOfSectio
 }
 
 
-int ScanExportDirectory(PE_INFO* PEInfo)
+int ScanExportDirectory(PE_INFO* PEInfo, HANDLE hLogFile)
 {
     char* bufferToWrite = NULL;
     DWORD* functionsArray = NULL;
@@ -158,7 +158,7 @@ int ScanExportDirectory(PE_INFO* PEInfo)
     bufferToWrite = (char*)calloc(MAX_BUFFER_LEN, sizeof(char));
     sprintf_s(bufferToWrite, MAX_BUFFER_LEN, "\r\nExports:\r\n");
 
-    WriteResultsToFile(bufferToWrite);
+    WriteResultsToFile(bufferToWrite, hLogFile);
     free(bufferToWrite);
 
     fileAddress = RVAToFA(PEInfo, (*PEInfo).pExportDir->AddressOfFunctions);
@@ -174,7 +174,7 @@ int ScanExportDirectory(PE_INFO* PEInfo)
     {
         fileAddress = (DWORD)((BYTE*)(*PEInfo).pDOS + RVAToFA(PEInfo, functionsArray[i]));
 
-        if (fileAddress >(DWORD)(*PEInfo).pDOS)
+        if (fileAddress > (DWORD)(*PEInfo).pDOS)
         {
             sprintf_s(fileAddressName, STRING_ON_STACK_LEN, "0x%08X", fileAddress);
         }
@@ -185,7 +185,7 @@ int ScanExportDirectory(PE_INFO* PEInfo)
 
         nameAddress = ExtractExportedFunctionName(PEInfo, functionsArray[i], &nameOrdinal, &nameDllForwardedTo);
 
-        if (0xFFFFFFFF == (DWORD)nameAddress)
+        if (0xFFFFFFFF == (DWORD)nameAddress)  
         {
             nameAddress = (BYTE*)undefinedNameString;
         }
@@ -213,7 +213,7 @@ int ScanExportDirectory(PE_INFO* PEInfo)
                 "-");
         }
 
-        WriteResultsToFile(bufferToWrite);
+        WriteResultsToFile(bufferToWrite, hLogFile);
         free(bufferToWrite);
     }
 
@@ -221,7 +221,7 @@ int ScanExportDirectory(PE_INFO* PEInfo)
 }
 
 
-int ScanImportDescriptor(PE_INFO* PEInfo)
+int ScanImportDescriptor(PE_INFO* PEInfo, HANDLE hLogFile)
 {
     char* bufferToWrite = NULL;
     BYTE* dllName = NULL;
@@ -232,7 +232,7 @@ int ScanImportDescriptor(PE_INFO* PEInfo)
     bufferToWrite = (char*)calloc(MAX_BUFFER_LEN, sizeof(char));
     sprintf_s(bufferToWrite, MAX_BUFFER_LEN, "\r\nImports:\r\n");
 
-    WriteResultsToFile(bufferToWrite);
+    WriteResultsToFile(bufferToWrite, hLogFile);
     free(bufferToWrite);
 
     for (; (0 != (*PEInfo).pImportDes->OriginalFirstThunk) && (0 != (*PEInfo).pImportDes->FirstThunk); (*PEInfo).pImportDes++)
@@ -252,7 +252,7 @@ int ScanImportDescriptor(PE_INFO* PEInfo)
         bufferToWrite = (char*)calloc(MAX_BUFFER_LEN, sizeof(char));
         sprintf_s(bufferToWrite, MAX_BUFFER_LEN, " %s:\r\n", dllName);
 
-        WriteResultsToFile(bufferToWrite);
+        WriteResultsToFile(bufferToWrite, hLogFile);
         free(bufferToWrite);
 
         thunks = (IMAGE_THUNK_DATA*)((BYTE*)(*PEInfo).pDOS + fileAddress);
@@ -272,7 +272,7 @@ int ScanImportDescriptor(PE_INFO* PEInfo)
                     ExtractOrdinal(thunks));
             }
 
-            WriteResultsToFile(bufferToWrite);
+            WriteResultsToFile(bufferToWrite, hLogFile);
             free(bufferToWrite);
         }
     }

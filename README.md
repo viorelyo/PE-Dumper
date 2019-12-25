@@ -3,7 +3,8 @@ Simple PE Format Parser written in C/C++ using Win32API
 
 ## Features
 * Reads passed path and scans recursively the folder
-* Dumps in an output-file the whole information about PE Format for each found file: 
+* Reads passed number of worker threads and creates a ThreadPool to process in parallel the queue of found PE files.
+* Dumps in `.log` output-files the whole information about PE Format for each found file: 
 1. DOS Header
 2. NT Headers
 3. Section Headers
@@ -17,8 +18,9 @@ Simple PE Format Parser written in C/C++ using Win32API
 
 ## Usage
 1. Compile project for `x86` platform
-2. Run the created `.exe` from `cmd` and give as parameter a valid Windows path (e.g. `pedumper.exe "C:"`) 
+2. Run the created `.exe` from `cmd` and pass as parameters a valid Windows path and number of worker threads (e.g. `pedumper.exe "C:" 64`) 
 
 ## Resources
 - http://www.delphibasics.info/home/delphibasicsarticles/anin-depthlookintothewin32portableexecutablefileformat-part1
 - http://www.delphibasics.info/home/delphibasicsarticles/anin-depthlookintothewin32portableexecutablefileformat-part2
+- https://msdn.microsoft.com/en-us/library/windows/desktop/ms686967(v=vs.85).aspx
